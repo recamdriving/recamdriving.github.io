@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="ReCamDriving: LiDAR-Free Camera-Controlled Novel Trajectory Video Generation">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ReCamDriving: LiDAR-Free Camera-Controlled Novel Trajectory Video Generation</title>
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+
+  <style>
+    .video-table th, .video-table td {
+      text-align: center !important;
+      vertical-align: middle !important;
+      padding: 16px 24px !important;
+    }
+    .video-table th {
+      font-size: 1.1em !important;
+      font-weight: 600;
+      background: #f4f7fa;
+      text-align: center !important;
+    }
+    .video-table td {
+      background: #fff;
+    }
+
+    .video-row {
+      margin-bottom: 10px !important;
+      width: 100%;
+      box-sizing: border-box;
+      background: transparent;
+    }
+
+    .video-row-header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      max-width: 1200px;         
+      margin: 0 auto 5px auto;    
+      box-sizing: border-box;
+      background: transparent;    
+    }
+
+    .video-row-flex {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      flex-wrap: nowrap;
+      width: 100%;
+      max-width: 1200px;          
+      margin: 0 auto;
+      padding: 6px 12px;          
+      box-sizing: border-box;
+      background: transparent;   
+    }
+
+    .video-grid-cell {
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 18px 12px;         
+      box-sizing: border-box;
+      background: transparent;    
+    }
+
+    .video-grid-cell video {
+      display: block;
+      width: 100%;
+      max-width: 420px;           
+      min-width: 220px;
+      aspect-ratio: 16/9;
+      height: auto !important;
+      max-height: 280px;          
+      object-fit: contain;
+      border-radius: 15px;
+      box-shadow: 0 2px 18px #0003;
+      background: transparent;    
+      margin: 0 auto;
+      transition: width 0.2s, height 0.2s;
+    }
+
+    .center-title {
+      text-align: center !important;
+      margin-top: 32px !important;
+      margin-bottom: 18px !important;
+    }
+    .video-section-sep {
+      margin-bottom: 34px !important;
+    }
+
+    .section-title-bg {
+      display: inline-block;
+      background: linear-gradient(90deg, #f8eefa 65%, #e4eaf7 100%);
+      border-radius: 999px;
+      box-shadow: 0 2px 8px #0000001a;
+      padding: 0.25em 0.9em;
+      margin-top: 0.4em;
+      margin-bottom: 2.0em;
+    }
+    .scene-title-bg {
+      background: linear-gradient(90deg, #f1f7fb 60%, #f4fafd 100%);
+    }
+    .mv-title-bg {
+      background: linear-gradient(90deg, #f7f9fa 60%, #e7f8f7 100%);
+      margin-top: 0.5em;
+      margin-bottom: 2.0em;
+    }
+    .custom-title-bg {
+      display: inline-block;
+      background: linear-gradient(90deg, #f8eefa 65%, #e4eaf7 100%);
+      border-radius: 999px;
+      box-shadow: 0 2px 8px #0000001a;
+      padding: 0.27em 1.1em;
+      margin-top: 0.5em;
+      margin-bottom: 2.1em;
+    }
+    .comparisons-title-bg {
+      background: linear-gradient(90deg, #e6edfa 65%, #e3f3fa 100%);
+      border-radius: 999px;
+      box-shadow: 0 2px 8px #0000001a;
+      padding: 0.25em 0.9em;
+      margin-top: 0.4em;
+      margin-bottom: 2.0em;
+      display: inline-block;
+    }
+
+    @media (max-width: 1350px) {
+      .video-row-flex,
+      .video-row-header {
+        max-width: 99vw;
+      }
+      .video-grid-cell video {
+        max-width: 38vw;
+        min-width: 150px;
+        max-height: 31vw;
+      }
+      .video-grid-cell {
+        padding: 16px 4vw;
+      }
+    }
+
+    @media (max-width: 950px) {
+      .video-row-flex,
+      .video-row-header {
+        max-width: 99vw;
+      }
+      .video-grid-cell video {
+        max-width: 99vw;
+        min-width: 120px;
+        max-height: 36vw;
+      }
+      .video-grid-cell {
+        padding: 8px 1vw;
+      }
+    }
+
+    @media (max-width: 650px) {
+      .video-row-flex,
+      .video-row-header {
+        flex-direction: column !important;
+      }
+      .video-grid-cell {
+        padding: 8px 2vw;
+      }
+      .video-grid-cell video {
+        max-width: 96vw !important;
+        min-width: 100px;
+        max-height: 62vw;
+      }
+    }
+  </style>
+
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      function rescaleVideo(e) {
+        const video = e.target;
+        const cell = video.parentElement;
+        const cellStyle = window.getComputedStyle(cell);
+        const paddingX = parseFloat(cellStyle.paddingLeft) + parseFloat(cellStyle.paddingRight);
+        const maxCellWidth = cell.offsetWidth - paddingX - 2;
+
+        const videoW = video.videoWidth;
+        const videoH = video.videoHeight;
+        if (videoW && videoH && maxCellWidth > 0) {
+          let targetW = maxCellWidth;
+          let targetH = targetW * (videoH / videoW);
+
+          let maxCellHeight = parseFloat(window.getComputedStyle(video).maxHeight) || 9999;
+          if (targetH > maxCellHeight) {
+            targetH = maxCellHeight;
+            targetW = targetH * (videoW / videoH);
+          }
+
+          video.style.width = targetW + 'px';
+          video.style.height = targetH + 'px';
+        } else {
+          video.style.width = "100%";
+          video.style.height = "auto";
+        }
+      }
+      document.querySelectorAll('.video-grid-cell video').forEach(function(video){
+        if (video.readyState >= 1) {
+          rescaleVideo({ target: video });
+        }
+        video.addEventListener('loadedmetadata', rescaleVideo);
+        window.addEventListener('resize', function () { rescaleVideo({ target: video }); });
+      });
+    });
+  </script>
+</head>
+
+<body>
+
+<section class="hero">
+  <div class="hero-body" style="padding-bottom: 0.12rem; padding-top: 1.6rem;">
+    <div class="container" style="max-width: 1400px; width: 92vw;">
+      <div class="columns is-centered">
+        <div class="column has-text-centered" style="width: 100%;">
+          <img src="./static/images/logo.png" alt="ReCamDriving Logo" style="height: 177px; margin-bottom: 7px; margin-top: 9px;" />
+          <h1 class="title is-1 publication-title" style="color: #0b0a0a; letter-spacing: -0.02em; line-height: 1.3; font-size: 3.0rem; margin-top: 0;">
+            ReCamDriving: LiDAR-Free Camera-Controlled<br>Novel Trajectory Video Generation
+          </h1>
+
+          <!-- Authors -->
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><a href="https://iron-lyk.github.io/" target="_blank">Yaokun Li</a><sup>1</sup>, </span>
+            <span class="author-block"><a>Shuaixian&nbsp;Wang</a><sup>1,3</sup>, </span>
+            <span class="author-block"><a href="https://scholar.google.com/citations?user=0_LPgUYAAAAJ&hl=zh-CN" target="_blank">Mantang Guo</a><sup>2</sup>, </span>
+            <span class="author-block"><a href="https://jackailab.github.io/" target="_blank">Jiehui Huang</a><sup>4</sup>, </span>
+            <span class="author-block"><a href="https://openreview.net/profile?id=~Taojun_Ding1" target="_blank">Taojun Ding</a><sup>2</sup></span>
+          </br>
+            <span class="author-block"><a href="https://scholar.google.com.hk/citations?user=Zac1-owAAAAJ&hl=zh-TW" target="_blank">Mu Hu</a><sup>4</sup></span>
+            <span class="author-block"><a href="https://scholar.google.com/citations?user=mSyd3BcAAAAJ&hl=zh-CN" target="_blank">Kaixuan Wang</a><sup>2</sup></span>
+            <span class="author-block"><a href="https://scholar.google.com/citations?user=u8Q0_xsAAAAJ&hl=zh-CN" target="_blank">Shaojie Shen</a><sup>4</sup></span>
+            <span class="author-block"><a href="https://ise.sysu.edu.cn/teacher/TanGuang" target="_blank">Guang Tan</a><sup>1</sup></span>
+          </div>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup> Sun Yat-sen University,</span>
+            <span class="author-block"><sup>2</sup> ZYT,</span>
+            <span class="author-block"><sup>3</sup> Shenzhen Polytechnic University</span>
+          </br>
+            <span class="author-block"><sup>4</sup> The Hong Kong University of Science and Technology</span>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+
+              <!-- arXiv Link. -->
+              <span class="link-block">
+                <a href=""
+                    class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <!-- <i class="ai ai-arxiv"></i> -->
+                      <img src="./static/images/arxiv-logomark-small.svg" style="height: 80%;">
+                  </span>
+                  <span>arXiv</span>
+                </a>
+              </span>
+
+              <!-- Code Link. -->
+              <span class="link-block">
+                <a href="" class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code</span>
+                  </a>
+              </span>
+
+              <!-- Data Link. -->
+              <span class="link-block">
+                <a href=""
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-database"></i>
+                  </span>
+                  <span>Data (soon)</span>
+                  </a>
+              </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<body>
+
+
+  
+
+
+<hr width="100%" size="2">
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="section-title-bg" style="margin-top: 0; margin-bottom: 18px;">
+        <h1 class="title is-3" style="color: #711f91; margin-top: 8px; margin-bottom: 8px;">Abstract</h1>
+      </div>
+    </div>
+    <br>
+    <div class="columns is-centered">
+      <div class="column is-full">
+        <div class="content has-text-justified" style="font-size: 1.09em;">
+          We propose <b><i>ReCamDriving</i></b>, a purely vision-based, camera-controlled novel-trajectory video generation framework. While repair-based methods fail to restore complex artifacts and LiDAR-based approaches rely on sparse and incomplete cues, ReCamDriving leverages dense and scene-complete 3DGS renderings for explicit geometric guidance, achieving precise camera-controllable generation. To mitigate overfitting to restoration behaviors when conditioned on 3DGS renderings, ReCamDriving adopts a two-stage training paradigm: the first stage uses camera poses for coarse control, while the second stage incorporates 3DGS renderings for fine-grained viewpoint and geometric guidance. Furthermore, we present a 3DGS-based cross-trajectory data curation strategy to eliminate the train–test gap in camera transformation patterns, enabling scalable multi-trajectory supervision from monocular videos. Based on this strategy, we construct the <b><i>ParaDrive</i></b> dataset, containing over 110K parallel-trajectory video pairs. Extensive experiments demonstrate that ReCamDriving achieves state-of-the-art camera controllability and structural consistency.
+        </div>
+      </div>
+    </div>
+    <div class="content has-text-centered" style="margin-top: 40px; margin-bottom: 40px;">
+      <img width="80%" src="./static/images/teaser.png">
+    </div>
+    <div style="margin-top: 2px; margin-bottom: 2px;">
+      <h1 class="tldr" style="font-size: 1.09em;">
+        <b>Comparison of novel-trajectory generation.</b> Repair-based methods (e.g., Difix3D+) suffer from severe artifacts under novel viewpoints, while LiDAR-based camera-controlled methods (e.g., StreetCrafter) show geometric inconsistencies in occluded or distant regions due to incomplete cues. In contrast, ReCamDriving employs a coarse-to-fine two-stage training strategy that leverages dense scene-structure information from novel-trajectory 3DGS renderings for precise camera control and structurally consistent generation.
+      </h1>
+    </div>
+  </div>
+</section>
+
+<hr width="100%" size="2">
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="section-title-bg" style="margin-top: 0; margin-bottom: 18px;">
+        <h1 class="title is-3" style="color: #711f91; margin: 0;">Methodology</h1>
+      </div>
+    </div>
+    <br>
+    <div class="content has-text-centered" style="margin-top: 1px; margin-bottom: 40px;">
+      <img width="160%" src="./static/images/framework.png">
+    </div>
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-full">
+        <div class="content has-text-justified" style="font-size: 1.09em;">
+          <b>Overview of our framework.</b> We adopt a two-stage training scheme for precise and structurally consistent novel-trajectory video generation. In <b>Stage 1</b>, ReCamDriving trains DiT blocks conditioned on the source trajectory video and relative camera (cam.) pose. When switching to <b>Stage 2</b>, the original DiT parameters are frozen, and additional attention modules are introduced to integrate 3DGS renderings for fine-grained view control and structural guidance. Shared modules between stages are connected with blue dashed lines.
+        </div>
+      </div>
+    </div>
+    <div class="content has-text-centered" style="margin-top: 40px; margin-bottom: 40px;">
+      <img width="55%" src="./static/images/data_curation.png">
+    </div>
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-full">
+        <div class="content has-text-justified" style="font-size: 1.09em;">
+          <b>Cross-trajectory Data Curation Strategy.</b> We introduce a novel 3DGS-based cross-trajectory data curation strategy to eliminate the train–inference gap in camera transformation patterns, enabling scalable lateral trajectory supervision from single-trajectory videos. With this strategy, we construct the <b><i>ParaDrive</i></b> dataset, containing over 110K parallel-trajectory video pairs.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr width="100%" size="2">
+
+<section class="section">
+  <div class="container" style="width: 100%; max-width: none; padding: 0;">
+    <div class="columns is-centered has-text-centered">
+      <div class="section-title-bg" style="margin-top: 0; margin-bottom: 38px;">
+        <h1 class="title is-3" style="color:#711f91; margin: 0;">Demos</h1>
+      </div>
+    </div>
+    <div class="has-text-centered" style="width:66%; max-width:1150px; margin:0 auto;">
+      <div class="content has-text-justified" style="font-size: 1.09em; margin-top: 8px;">
+        Our method leverages novel-trajectory 3DGS renderings as structural camera conditions, enabling the generation of high-quality novel-trajectory videos under large lateral offsets.
+      </div>
+    </div>
+    <div class="video-section-sep"></div>
+
+    <div class="has-text-centered video-row">
+      <div class="video-row-header" style="display: flex; justify-content:center;">
+        <div style="width:33%; text-align:center;"><b>Source Trajectory Video</b></div>
+        <div style="width:33%; text-align:center;">Condition (3DGS Rendering @ Right 3m)</div>
+        <div style="width:33%; text-align:center;"><b>Generated Novel-Trajectory Video</b></div>
+      </div>
+      <div class="video-row-flex">
+        <div class="video-grid-cell">
+          <video src="./static/videos/scene4_gt.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="./static/videos/scene4_+3_gs.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="./static/videos/scene4_+3_our.mp4" controls autoplay loop muted></video>
+        </div>
+      </div>
+    </div>
+
+    <div class="has-text-centered video-row">
+      <div class="video-row-header" style="display: flex; justify-content:center;">
+        <div style="width:33%; text-align:center;"><b>Source Trajectory Video</b></div>
+        <div style="width:33%; text-align:center;">Condition (3DGS Rendering @ Right 3m)</div>
+        <div style="width:33%; text-align:center;"><b>Generated Novel-Trajectory Video</b></div>
+      </div>
+      <div class="video-row-flex">
+        <div class="video-grid-cell">
+          <video src="./static/videos/scene7_gt.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="./static/videos/scene7_+3_gs.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="./static/videos/scene7_+3_our.mp4" controls autoplay loop muted></video>
+        </div>
+      </div>
+    </div>
+
+    <div class="has-text-centered video-row" style="margin-top: 18px;">
+      <div class="video-row-header" style="display: flex; justify-content:center;">
+        <div style="width:33%; text-align:center;"><b>Source Trajectory Video</b></div>
+        <div style="width:33%; text-align:center;">Condition (3DGS Rendering @ Right 4m)</div>
+        <div style="width:33%; text-align:center;"><b>Generated Novel-Trajectory Video</b></div>
+      </div>
+      <div class="video-row-flex">
+        <div class="video-grid-cell">
+          <video src="./static/videos/scene2_gt.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="./static/videos/scene2_+4_gs.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="./static/videos/scene2_+4_our.mp4" controls autoplay loop muted></video>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: center; margin-top:32px; margin-bottom:32px;">
+        <hr style="width:60%; border: none; border-top: 1px solid #e0e5ea;">
+      </div>
+    </div>
+
+    <div class="has-text-centered video-row">
+      <div class="video-row-header" style="display: flex; justify-content:center;">
+        <div style="width:33%; text-align:center;">Left @ 2m</div>
+        <div style="width:33%; text-align:center;"><b>Source Trajectory Video</b></div>
+        <div style="width:33%; text-align:center;">Right @ 2m</div>
+      </div>
+      <div class="video-row-flex">
+        <div class="video-grid-cell">
+          <video src="static/videos/scene3_-2_our.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene3_gt.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene3_+2_our.mp4" controls autoplay loop muted></video>
+        </div>
+      </div>
+    </div>
+
+    <div class="has-text-centered video-row">
+      <div class="video-row-header" style="display: flex; justify-content:center;">
+        <div style="width:33%; text-align:center;">Left @ 3m</div>
+        <div style="width:33%; text-align:center;"><b>Source Trajectory Video</b></div>
+        <div style="width:33%; text-align:center;">Right @ 3m</div>
+      </div>
+      <div class="video-row-flex">
+        <div class="video-grid-cell">
+          <video src="static/videos/scene5_-3_our.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene5_gt.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene5_+3_our.mp4" controls autoplay loop muted></video>
+        </div>
+      </div>
+    </div>
+
+    <div class="has-text-centered video-row">
+      <div class="video-row-header" style="display: flex; justify-content:center;">
+        <div style="width:33%; text-align:center;">Left @ 4m</div>
+        <div style="width:33%; text-align:center;"><b>Source Trajectory Video</b></div>
+        <div style="width:33%; text-align:center;">Right @ 4m</div>
+      </div>
+      <div class="video-row-flex">
+        <div class="video-grid-cell">
+          <video src="static/videos/scene6_clip2_-4_our.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene6_clip2_gt.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene6_clip2_+4_our.mp4" controls autoplay loop muted></video>
+        </div>
+      </div>
+    </div>
+    <div class="video-section-sep"></div>
+  </div>
+</section>
+
+<hr width="100%" size="2">
+
+<section class="section">
+  <div class="container" style="width: 100%; max-width: none; padding: 0;">
+    <div class="columns is-centered has-text-centered">
+      <div class="comparisons-title-bg">
+        <h1 class="title is-3" style="color:#0b0b0b; margin:0;">Comparisons</h1>
+      </div>
+    </div>
+    <div class="has-text-centered" style="width:66%; max-width:1150px; margin:0 auto;">
+      <div class="content has-text-justified" style="font-size: 1.09em; margin-top: 8px;">
+        We compare ReCamDriving with state-of-the-art novel-trajectory generation methods. Repair-based methods (e.g., Difix3D+) often produce view-inconsistent corrections on fine structures such as lane markings and road text, while LiDAR-based camera-controlled methods (e.g., FreeVS and StreetCrafter) suffer from severe inconsistencies under large viewpoint shifts due to sparse LiDAR conditioning, especially on occluded vehicles and distant backgrounds. In contrast, ReCamDriving achieves geometrically consistent and high-quality generation across wide camera shifts. The FreeVS results shown below appear at a lower resolution because the officially released model is trained and tested on a sky-cropped resolution.
+      </div>
+    </div>
+    <div class="columns is-centered has-text-centered">
+      <h1 class="title is-4 center-title" style="color:#063d59; margin: 0;">Scene 1 @ Left 3m</h1>
+    </div>
+    <div class="has-text-centered video-row">
+      <div class="video-row-header" style="display:flex;justify-content:center;">
+        <div style="width:33%;text-align:center;"><b>Source Trajectory Video</b></div>
+        <div style="width:33%;text-align:center;">DriveStudio</div>
+        <div style="width:33%;text-align:center;">Difix3D+</div>
+      </div>
+      <div class="video-row-flex">
+        <div class="video-grid-cell">
+          <video src="static/videos/scene6_clip1_gt.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene6_clip1_-3_gs.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene6_clip1_-3_difix.mp4" controls autoplay loop muted></video>
+        </div>
+      </div>
+    </div>
+    <div class="has-text-centered video-row">
+      <div class="video-row-header" style="display:flex;justify-content:center;">
+        <div style="width:33%;text-align:center;">FreeVS</div>
+        <div style="width:33%;text-align:center;">StreetCrafter</div>
+        <div style="width:33%;text-align:center;">Ours</div>
+      </div>
+      <div class="video-row-flex">
+        <div class="video-grid-cell">
+          <video src="static/videos/scene6_clip1_-3_freevs.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene6_clip1_-3_streetcrafter.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene6_clip1_-3_our.mp4" controls autoplay loop muted></video>
+        </div>
+      </div>
+    </div>
+    <div class="video-section-sep"></div>
+    <div class="columns is-centered has-text-centered">
+      <h1 class="title is-4 center-title" style="color:#063d59; margin: 0;">Scene 2 @ Left 3m</h1>
+    </div>
+    <div class="has-text-centered video-row">
+      <div class="video-row-header" style="display:flex;justify-content:center;">
+        <div style="width:33%;text-align:center;"><b>Source Trajectory Video</b></div>
+        <div style="width:33%;text-align:center;">DriveStudio</div>
+        <div style="width:33%;text-align:center;">Difix3D+</div>
+      </div>
+      <div class="video-row-flex">
+        <div class="video-grid-cell">
+          <video src="static/videos/scene5_gt.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene5_-3_gs.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene5_-3_difix.mp4" controls autoplay loop muted></video>
+        </div>
+      </div>
+    </div>
+    <div class="has-text-centered video-row">
+      <div class="video-row-header" style="display:flex;justify-content:center;">
+        <div style="width:33%;text-align:center;">FreeVS</div>
+        <div style="width:33%;text-align:center;">StreetCrafter</div>
+        <div style="width:33%;text-align:center;">Ours</div>
+      </div>
+      <div class="video-row-flex">
+        <div class="video-grid-cell">
+          <video src="static/videos/scene5_-3_freevs.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene5_-3_streetcrafter.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene5_-3_our.mp4" controls autoplay loop muted></video>
+        </div>
+      </div>
+    </div>
+    <div class="video-section-sep"></div>
+    <div class="columns is-centered has-text-centered">
+      <h1 class="title is-4 center-title" style="color:#063d59; margin: 0;">Scene 3 @ Right 3m</h1>
+    </div>
+    <div class="has-text-centered video-row">
+      <div class="video-row-header" style="display:flex;justify-content:center;">
+        <div style="width:33%;text-align:center;"><b>Source Trajectory Video</b></div>
+        <div style="width:33%;text-align:center;">DriveStudio</div>
+        <div style="width:33%;text-align:center;">Difix3D+</div>
+      </div>
+      <div class="video-row-flex">
+        <div class="video-grid-cell">
+          <video src="static/videos/scene1_gt.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene1_+3_gs.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene1_+3_difix.mp4" controls autoplay loop muted></video>
+        </div>
+      </div>
+    </div>
+    <div class="has-text-centered video-row">
+      <div class="video-row-header" style="display:flex;justify-content:center;">
+        <div style="width:33%;text-align:center;">FreeVS</div>
+        <div style="width:33%;text-align:center;">StreetCrafter</div>
+        <div style="width:33%;text-align:center;">Ours</div>
+      </div>
+      <div class="video-row-flex">
+        <div class="video-grid-cell">
+          <video src="static/videos/scene1_+3_freevs.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene1_+3_streetcrafter.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene1_+3_our.mp4" controls autoplay loop muted></video>
+        </div>
+      </div>
+    </div>
+    <div class="video-section-sep"></div>
+    <div class="columns is-centered has-text-centered">
+      <h1 class="title is-4 center-title" style="color:#063d59; margin: 0;">Scene 4 @ Right 3m</h1>
+    </div>
+    <div class="has-text-centered video-row">
+      <div class="video-row-header" style="display:flex;justify-content:center;">
+        <div style="width:33%;text-align:center;">Source View</div>
+        <div style="width:33%;text-align:center;">DriveStudio</div>
+        <div style="width:33%;text-align:center;">Difix3D+</div>
+      </div>
+      <div class="video-row-flex">
+        <div class="video-grid-cell">
+          <video src="static/videos/scene7_gt.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene7_+3_gs.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene7_+3_difix.mp4" controls autoplay loop muted></video>
+        </div>
+      </div>
+    </div>
+    <div class="has-text-centered video-row">
+      <div class="video-row-header" style="display:flex;justify-content:center;">
+        <div style="width:33%;text-align:center;">FreeVS</div>
+        <div style="width:33%;text-align:center;">StreetCrafter</div>
+        <div style="width:33%;text-align:center;">Ours</div>
+      </div>
+      <div class="video-row-flex">
+        <div class="video-grid-cell">
+          <video src="static/videos/scene7_+3_freevs.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene7_+3_streetcrafter.mp4" controls autoplay loop muted></video>
+        </div>
+        <div class="video-grid-cell">
+          <video src="static/videos/scene7_+3_our.mp4" controls autoplay loop muted></video>
+        </div>
+      </div>
+    </div>
+    <div class="video-section-sep"></div>
+  </div>
+</section>
+
+<hr width="100%" size="2">
+<section class="section" style="padding-bottom: 0px;"> <div class="container is-max-desktop content">
+  <h2 class="title" style="color: #050505;">Acknowledgements and References</h2>
+  <div class="content has-text-justified">
+    We sincerely thank the following outstanding works for their pioneering exploration and inspiration in this field, as well as the assistance provided by their open-source code.
+  </div>
+
+  <div style="margin-left: 32px;">
+    <div class="content" style="background-color: #f4f7fa; padding: 18px 16px; border-radius: 8px;">
+      [1] Bai, Jianhong, et al. "Recammaster: Camera-controlled generative rendering from a single video." arXiv preprint arXiv:2503.11647 (2025).<br>
+      [2] Wan, Team, et al. "Wan: Open and advanced large-scale video generative models." arXiv preprint arXiv:2503.20314 (2025).<br>
+      [3] Wu, Jay Zhangjie, et al. "Difix3d+: Improving 3d reconstructions with single-step diffusion models." Proceedings of the Computer Vision and Pattern Recognition Conference. 2025.<br>
+      [4] Chen, Ziyu, et al. "Omnire: Omni urban scene reconstruction." arXiv preprint arXiv:2408.16760 (2024).<br>
+      [5] Wang, Qitai, et al. "Freevs: Generative view synthesis on free driving trajectory." arXiv preprint arXiv:2410.18079 (2024).<br>
+      [6] Yan, Yunzhi, et al. "Streetcrafter: Street view synthesis with controllable video diffusion models." Proceedings of the Computer Vision and Pattern Recognition Conference. 2025.
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="section" id="BibTeX" style="padding-top: 20px;"> <div class="container is-max-desktop content">
+  <h2 class="title" style="color: #050505;">Citation</h2>
+  If you find this project helpful, please cite us:
+    <div style="margin-left: 32px; background-color: #f4f7fa; padding: 18px 16px; border-radius: 8px;">
+      <pre style="background-color: transparent; margin: 0; padding: 0;"><code>@article{li2025recamdriving,
+  title={ReCamDriving: LiDAR-Free Camera-Controlled Novel Trajectory Video Generation},
+  author={xxx},
+  journal={arXiv preprint arXiv:2510.22213},
+  year={2025}
+}</code></pre>
+    </div>
+  </div>
+</section>
+
+
+
+
+<footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+
+      <div class="content">
+
+        <div class="columns is-centered has-text-centered">
+          <div class="column is-full">
+            <div class="content has-text-justified">
+              This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template/">Template</a>, which was adopted from the <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a> project page.
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+
+    </div>
+  </div>
+</footer>
+
+
+</body>
+</html>
